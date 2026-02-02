@@ -5,18 +5,24 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { 
   Package, Users, MessageSquare, Download, X, Send,
-  CheckCircle, Clock, Truck, RefreshCw, LogOut, FileText,
-  CreditCard, Wallet, Building2 
+  CreditCard, Wallet, Building2, QrCode, Edit3, Trash2, 
+  ExternalLink, Plus, Link as LinkIcon, LogOut, RefreshCw, Truck
 } from 'lucide-react';
-import Link from 'next/link';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'orders' | 'tickets' | 'subscribers'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'tickets' | 'subscribers' | 'qrcode'>('orders');
+  
+  // --- DATA STATE ---
   const [orders, setOrders] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [subscribers, setSubscribers] = useState<any[]>([]);
+  const [qrCodes, setQrCodes] = useState<any[]>([]);
+
+  // --- QR FORM STATE ---
+  const [isEditingQr, setIsEditingQr] = useState<any>(null);
+  const [qrForm, setQrForm] = useState({ label: '', destination: '', slug: '' });
   
-  // Detail Views State
+  // --- DETAIL VIEW STATE ---
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [ticketMessages, setTicketMessages] = useState<any[]>([]);
@@ -46,54 +52,55 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     setLoading(true);
-    const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-    const { data: t } = await supabase.from('tickets').select('*').order('created_at', { ascending: false });
-    const { data: s } = await supabase.from('subscribers').select('*').order('created_at', { ascending: false });
+    // Fetch all data in parallel
+    const [ordersRes, ticketsRes, subsRes, qrRes] = await Promise.all([
+      supabase.from('orders').select('*').order('created_at', { ascending: false }),
+      supabase.from('tickets').select('*').order('created_at', { ascending: false }),
+      supabase.from('subscribers').select('*').order('created_at', { ascending: false }),
+      supabase.from('qr_codes').select('*').order('created_at', { ascending: false })
+    ]);
     
-    if (o) setOrders(o);
-    if (t) setTickets(t);
-    if (s) setSubscribers(s);
+    if (ordersRes.data) setOrders(ordersRes.data);
+    if (ticketsRes.data) setTickets(ticketsRes.data);
+    if (subsRes.data) setSubscribers(subsRes.data);
+    if (qrRes.data) setQrCodes(qrRes.data);
     setLoading(false);
   };
 
-  // --- ORDER LOGIC ---
+  // ==============================
+  // 1. ORDER LOGIC
+  // ==============================
   const updateOrderStatus = async (id: string, newStatus: string) => {
-    // 1. Optimistic UI Update (Change it on screen immediately)
+    // Optimistic UI Update
     const updatedOrders = orders.map(o => o.id === id ? { ...o, payment_status: newStatus } : o);
     setOrders(updatedOrders);
     
-    // Also update the modal view if it's open
     if (selectedOrder && selectedOrder.id === id) {
       setSelectedOrder({ ...selectedOrder, payment_status: newStatus });
     }
 
     try {
-      // 2. Call API to update DB and Send Email
-      const res = await fetch('/api/admin/update-status', {
+      await fetch('/api/admin/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: id,
           newStatus: newStatus,
-          adminEmail: "m.mymaouhoubi@mam-nature.com" // Must match your .env ADMIN_EMAIL
+          adminEmail: "m.mymaouhoubi@mam-nature.com"
         })
       });
-
-      if (!res.ok) throw new Error("Failed to update");
-      console.log("✅ Status updated & Email sent");
-
     } catch (error) {
       console.error("Update failed:", error);
-      alert("Failed to update status. Check console.");
-      // Revert UI on error
-      fetchData(); 
+      alert("Failed to update status.");
+      fetchData(); // Revert on error
     }
   };
 
-  // --- TICKET LOGIC ---
+  // ==============================
+  // 2. TICKET LOGIC
+  // ==============================
   const openTicket = async (ticket: any) => {
     setSelectedTicket(ticket);
-    // Fetch messages
     const { data } = await supabase
       .from('ticket_messages')
       .select('*')
@@ -106,7 +113,6 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!replyText.trim()) return;
 
-    // 1. Insert Message
     const { data: msg } = await supabase.from('ticket_messages').insert({
       ticket_id: selectedTicket.id,
       sender_email: "m.mymaouhoubi@mam-nature.com",
@@ -116,7 +122,6 @@ export default function AdminDashboard() {
     if (msg) setTicketMessages([...ticketMessages, msg]);
     setReplyText('');
 
-    // 2. Update Ticket Status to "In Progress" if it was Open
     if (selectedTicket.status === 'open') {
       updateTicketStatus(selectedTicket.id, 'in_progress');
     }
@@ -127,6 +132,72 @@ export default function AdminDashboard() {
     if (selectedTicket) setSelectedTicket({ ...selectedTicket, status: newStatus });
     await supabase.from('tickets').update({ status: newStatus }).eq('id', id);
   };
+
+  // ==============================
+  // 3. DYNAMIC QR LOGIC (FIXED)
+  // ==============================
+  const generateSlug = () => Math.random().toString(36).substring(2, 8); // Random 6 char string
+
+  const saveQrCode = async () => {
+    if (!qrForm.label || !qrForm.destination) return alert("Please fill all fields");
+
+    // If editing, use existing slug. If new, generate one.
+    const slug = isEditingQr ? isEditingQr.slug : generateSlug();
+
+    const payload = {
+      label: qrForm.label,
+      destination: qrForm.destination,
+      slug: slug
+    };
+
+    if (isEditingQr) {
+      // Update existing
+      const { error } = await supabase.from('qr_codes').update(payload).eq('id', isEditingQr.id);
+      if (!error) {
+        setQrCodes(qrCodes.map(q => q.id === isEditingQr.id ? { ...q, ...payload } : q));
+        setIsEditingQr(null);
+        setQrForm({ label: '', destination: '', slug: '' });
+      }
+    } else {
+      // Create new
+      const { data, error } = await supabase.from('qr_codes').insert([payload]).select().single();
+      if (!error && data) {
+        setQrCodes([data, ...qrCodes]);
+        setQrForm({ label: '', destination: '', slug: '' });
+      }
+    }
+  };
+
+  const deleteQr = async (id: string) => {
+    if(!confirm("Are you sure? This will break any stickers already printed with this code.")) return;
+    await supabase.from('qr_codes').delete().eq('id', id);
+    setQrCodes(qrCodes.filter(q => q.id !== id));
+  };
+
+  const downloadQR = async (slug: string) => {
+    // ⚠️ CRITICAL FIX: HARDCODE THE LIVE DOMAIN
+    // If we use window.location.origin, it prints "localhost" which breaks on phones.
+    const PRODUCTION_DOMAIN = "https://dioxera.com"; 
+
+    // Construct the permanent tracking link
+    const trackingUrl = `${PRODUCTION_DOMAIN}/qr/${slug}`;
+    
+    try {
+      // Use public API to generate PNG
+      const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(trackingUrl)}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dioxera-qr-${slug}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading QR:', error);
+    }
+  };
+
 
   if (loading) return <div className="min-h-screen bg-[#111] flex items-center justify-center"><RefreshCw className="text-brand-primary animate-spin" /></div>;
 
@@ -149,13 +220,16 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
         
         {/* TABS */}
-        <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit">
+        <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit overflow-x-auto">
           <TabButton active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} icon={<Package size={16}/>} label="Orders" count={orders.length} />
           <TabButton active={activeTab === 'tickets'} onClick={() => setActiveTab('tickets')} icon={<MessageSquare size={16}/>} label="Tickets" count={tickets.filter(t => t.status === 'open').length} />
           <TabButton active={activeTab === 'subscribers'} onClick={() => setActiveTab('subscribers')} icon={<Users size={16}/>} label="Users" count={subscribers.length} />
+          <TabButton active={activeTab === 'qrcode'} onClick={() => setActiveTab('qrcode')} icon={<QrCode size={16}/>} label="Dynamic QR" />
         </div>
 
-        {/* === TAB 1: ORDERS === */}
+        {/* =========================================================
+            TAB CONTENT: ORDERS
+           ========================================================= */}
         {activeTab === 'orders' && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <table className="w-full text-left text-sm">
@@ -174,7 +248,6 @@ export default function AdminDashboard() {
                     <td className="p-4 font-mono text-xs">#{order.id.slice(0, 8)}</td>
                     <td className="p-4 font-bold">
                       {order.customer_email}
-                      {/* Payment Method Icons */}
                       <div className="flex items-center gap-1 mt-1">
                         {order.payment_method === 'stripe' && <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded flex items-center gap-1 text-gray-500"><CreditCard size={10}/> Stripe</span>}
                         {order.payment_method === 'paypal' && <span className="text-[10px] bg-blue-50 px-2 py-0.5 rounded flex items-center gap-1 text-blue-600"><Wallet size={10}/> PayPal</span>}
@@ -198,7 +271,9 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* === TAB 2: TICKETS === */}
+        {/* =========================================================
+            TAB CONTENT: TICKETS
+           ========================================================= */}
         {activeTab === 'tickets' && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="divide-y divide-gray-100">
@@ -219,7 +294,9 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* === TAB 3: SUBSCRIBERS === */}
+        {/* =========================================================
+            TAB CONTENT: SUBSCRIBERS
+           ========================================================= */}
         {activeTab === 'subscribers' && (
            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
              <div className="grid md:grid-cols-3 gap-4">
@@ -231,9 +308,107 @@ export default function AdminDashboard() {
              </div>
            </div>
         )}
+
+        {/* =========================================================
+            TAB CONTENT: DYNAMIC QR MANAGER
+           ========================================================= */}
+        {activeTab === 'qrcode' && (
+           <div className="space-y-6">
+             
+             {/* EDITOR BOX */}
+             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+               <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-2">
+                 <Edit3 size={18} className="text-brand-dark"/> {isEditingQr ? 'Edit Link Destination' : 'Create New QR'}
+               </h2>
+               
+               <div className="grid md:grid-cols-3 gap-4 items-end">
+                 {/* Label Input */}
+                 <div>
+                   <label className="text-xs font-bold uppercase text-gray-400">Label (Internal)</label>
+                   <input 
+                     value={qrForm.label} 
+                     onChange={(e) => setQrForm({...qrForm, label: e.target.value})}
+                     placeholder="e.g. Batch 1 Stickers"
+                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm"
+                   />
+                 </div>
+                 
+                 {/* Destination Input */}
+                 <div className="md:col-span-2 flex gap-2">
+                   <div className="flex-1">
+                     <label className="text-xs font-bold uppercase text-gray-400">Destination URL (Any Link)</label>
+                     <div className="relative">
+                       <LinkIcon size={14} className="absolute left-3 top-3 text-gray-400" />
+                       <input 
+                         value={qrForm.destination} 
+                         onChange={(e) => setQrForm({...qrForm, destination: e.target.value})}
+                         placeholder="https://youtube.com/..."
+                         className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm font-mono text-blue-600"
+                       />
+                     </div>
+                   </div>
+                   
+                   <button onClick={saveQrCode} className="bg-brand-dark text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition flex items-center gap-2 whitespace-nowrap">
+                     {isEditingQr ? 'Update Link' : <><Plus size={16}/> Create</>}
+                   </button>
+                   
+                   {isEditingQr && (
+                     <button onClick={() => { setIsEditingQr(null); setQrForm({label:'', destination:'', slug:''}); }} className="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold">
+                       Cancel
+                     </button>
+                   )}
+                 </div>
+               </div>
+               <p className="text-[10px] text-gray-400 mt-2">
+                 * You can update the Destination URL anytime. The QR code image will remain valid.
+               </p>
+             </div>
+
+             {/* LIST OF CODES */}
+             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+               <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-xs font-bold text-gray-400 uppercase">
+                    <tr>
+                      <th className="p-4">Label</th>
+                      <th className="p-4 hidden md:table-cell">Smart Link (Print This)</th>
+                      <th className="p-4">Redirects To (Editable)</th>
+                      <th className="p-4 text-center">Scans</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {qrCodes.map((qr) => (
+                      <tr key={qr.id} className="hover:bg-gray-50">
+                        <td className="p-4 font-bold">{qr.label}</td>
+                        <td className="p-4 text-gray-400 font-mono text-xs hidden md:table-cell">
+                          /qr/{qr.slug}
+                        </td>
+                        <td className="p-4 font-mono text-xs text-blue-600 truncate max-w-[150px] md:max-w-[300px]">
+                          <a href={qr.destination.startsWith('http') ? qr.destination : `https://${qr.destination}`} target="_blank" className="hover:underline flex items-center gap-1">
+                            {qr.destination} <ExternalLink size={10}/>
+                          </a>
+                        </td>
+                        <td className="p-4 font-bold text-center">{qr.scans || 0}</td>
+                        <td className="p-4 text-right flex justify-end gap-2">
+                          <button onClick={() => downloadQR(qr.slug)} className="p-2 hover:bg-gray-200 rounded text-gray-600" title="Download PNG"><Download size={16}/></button>
+                          <button onClick={() => { setIsEditingQr(qr); setQrForm(qr); }} className="p-2 hover:bg-blue-100 rounded text-blue-600" title="Edit Destination"><Edit3 size={16}/></button>
+                          <button onClick={() => deleteQr(qr.id)} className="p-2 hover:bg-red-100 rounded text-red-600" title="Delete"><Trash2 size={16}/></button>
+                        </td>
+                      </tr>
+                    ))}
+                    {qrCodes.length === 0 && (
+                      <tr><td colSpan={5} className="p-8 text-center text-gray-400">No QR Codes created yet. Create one above!</td></tr>
+                    )}
+                  </tbody>
+               </table>
+             </div>
+           </div>
+        )}
       </main>
 
-      {/* === ORDER DETAIL MODAL === */}
+      {/* =========================================================
+          MODAL: ORDER DETAIL
+         ========================================================= */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-6 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-2xl rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -307,7 +482,9 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* === TICKET CHAT MODAL === */}
+      {/* =========================================================
+          MODAL: TICKET CHAT
+         ========================================================= */}
       {selectedTicket && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-end p-0 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
@@ -332,7 +509,6 @@ export default function AdminDashboard() {
 
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
-              {/* Initial Ticket Message */}
               <div className="flex justify-start">
                 <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
                   <p className="font-bold text-xs text-brand-dark mb-1">Customer</p>
@@ -340,7 +516,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Thread */}
               {ticketMessages.map((msg) => {
                 const isAdmin = msg.sender_email === "m.mymaouhoubi@mam-nature.com";
                 return (
@@ -378,9 +553,10 @@ export default function AdminDashboard() {
   );
 }
 
+// Reusable Tab Button
 function TabButton({ active, onClick, icon, label, count }: any) {
   return (
-    <button onClick={onClick} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${active ? 'bg-[#111] text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
+    <button onClick={onClick} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap ${active ? 'bg-[#111] text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
       {icon} {label}
       {count !== undefined && <span className={`text-[10px] px-2 py-0.5 rounded-full ${active ? 'bg-brand-primary text-black' : 'bg-gray-200'}`}>{count}</span>}
     </button>

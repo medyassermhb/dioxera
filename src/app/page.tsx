@@ -44,6 +44,7 @@ export default function Home() {
         <section id="FAQ">
           <FAQ />
         </section>
+        
         <Newsletter />
       
       </main>
