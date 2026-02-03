@@ -1,35 +1,42 @@
-import { Zap, Shield, Cpu, RefreshCw } from 'lucide-react';
+"use client";
 
-const features = [
-  {
-    icon: Zap,
-    title: "Electrolytic Activation",
-    desc: "Our proprietary electrolysis chamber activates Sodium Chlorite with zero acid residue, ensuring the purest CDL solution available."
-  },
-  {
-    icon: Cpu,
-    title: "Smart Monitoring",
-    desc: "Integrated sensors continuously monitor PPM levels and temperature, adjusting the reaction in real-time for perfect consistency."
-  },
-  {
-    icon: Shield,
-    title: "Hermetic Seal",
-    desc: "The closed-loop system prevents gas leakage, maximizing potency while ensuring complete safety for the operator."
-  },
-  {
-    icon: RefreshCw,
-    title: "Auto-Cycle Technology",
-    desc: "One-touch operation. The system handles the mixing, activation, and stabilization phases automatically."
-  }
-];
+import { Zap, Shield, Cpu, RefreshCw } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
 
 export default function Features() {
+  const { language } = useAppStore();
+  const t = dictionary[language].features;
+
+  const features = [
+    {
+      icon: Zap,
+      title: t.f1_title,
+      desc: t.f1_desc
+    },
+    {
+      icon: Cpu,
+      title: t.f2_title,
+      desc: t.f2_desc
+    },
+    {
+      icon: Shield,
+      title: t.f3_title,
+      desc: t.f3_desc
+    },
+    {
+      icon: RefreshCw,
+      title: t.f4_title,
+      desc: t.f4_desc
+    }
+  ];
+
   return (
     <section className="py-24 bg-gray-50">
       <div className="container px-6 mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl lg:text-4xl font-black tracking-tight mb-4">Technology Refined.</h2>
-          <p className="text-gray-500">We stripped away the complexity of manual generation to create a device that is safer, faster, and more potent.</p>
+          <h2 className="text-3xl lg:text-4xl font-black tracking-tight mb-4">{t.heading}</h2>
+          <p className="text-gray-500">{t.subheading}</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

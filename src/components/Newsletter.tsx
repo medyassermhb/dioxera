@@ -2,8 +2,13 @@
 
 import { useState } from 'react';
 import { ArrowRight, CheckCircle2, Loader2, Mail } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
 
 export default function Newsletter() {
+  const { language } = useAppStore();
+  const t = dictionary[language].newsletter;
+  
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
@@ -20,34 +25,33 @@ export default function Newsletter() {
       setStatus('success');
       setEmail('');
     } else {
-      setStatus('idle'); // Or show error
+      setStatus('idle');
       alert("Something went wrong. Please try again.");
     }
   };
 
   return (
     <section className="py-24 bg-[#111] text-white overflow-hidden relative">
-      {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="container px-6 mx-auto relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] uppercase tracking-widest mb-6 text-brand-primary">
-            <Mail size={12} /> Stay Updated
+            <Mail size={12} /> {t.badge}
           </div>
           
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-6">
-            Join the <span className="text-brand-primary">Inner Circle</span>
+            {t.titleStart} <span className="text-brand-primary">{t.titleEnd}</span>
           </h2>
           
           <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
-            Get exclusive access to Gen-2 prototypes, medical protocol updates, and early-bird pricing on new equipment.
+            {t.description}
           </p>
 
           <form onSubmit={handleSubmit} className="relative max-w-md mx-auto">
             <input 
               type="email" 
-              placeholder="Enter your email address" 
+              placeholder={t.placeholder}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -68,15 +72,15 @@ export default function Newsletter() {
               {status === 'loading' ? (
                 <Loader2 className="animate-spin" size={18} />
               ) : status === 'success' ? (
-                <><CheckCircle2 size={18} /> Joined</>
+                <><CheckCircle2 size={18} /> {t.joined}</>
               ) : (
-                <>Join <ArrowRight size={18} /></>
+                <>{t.join} <ArrowRight size={18} /></>
               )}
             </button>
           </form>
 
           <p className="mt-6 text-xs text-gray-600 uppercase tracking-widest">
-            No Spam. Unsubscribe Anytime.
+            {t.spam}
           </p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+// src/app/admin/page.tsx
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
@@ -8,8 +9,13 @@ import {
   CreditCard, Wallet, Building2, QrCode, Edit3, Trash2, 
   ExternalLink, Plus, Link as LinkIcon, LogOut, RefreshCw, Truck
 } from 'lucide-react';
+import { useAppStore } from '@/lib/store'; // IMPORT STORE
+import { dictionary } from '@/lib/dictionary'; // IMPORT DICTIONARY
 
 export default function AdminDashboard() {
+  const { language } = useAppStore(); // GET LANGUAGE
+  const t = dictionary[language].admin; // SHORTCUT
+
   const [activeTab, setActiveTab] = useState<'orders' | 'tickets' | 'subscribers' | 'qrcode'>('orders');
   
   // --- DATA STATE ---
@@ -134,14 +140,13 @@ export default function AdminDashboard() {
   };
 
   // ==============================
-  // 3. DYNAMIC QR LOGIC (FIXED)
+  // 3. DYNAMIC QR LOGIC
   // ==============================
-  const generateSlug = () => Math.random().toString(36).substring(2, 8); // Random 6 char string
+  const generateSlug = () => Math.random().toString(36).substring(2, 8); 
 
   const saveQrCode = async () => {
     if (!qrForm.label || !qrForm.destination) return alert("Please fill all fields");
 
-    // If editing, use existing slug. If new, generate one.
     const slug = isEditingQr ? isEditingQr.slug : generateSlug();
 
     const payload = {
@@ -151,7 +156,6 @@ export default function AdminDashboard() {
     };
 
     if (isEditingQr) {
-      // Update existing
       const { error } = await supabase.from('qr_codes').update(payload).eq('id', isEditingQr.id);
       if (!error) {
         setQrCodes(qrCodes.map(q => q.id === isEditingQr.id ? { ...q, ...payload } : q));
@@ -159,7 +163,6 @@ export default function AdminDashboard() {
         setQrForm({ label: '', destination: '', slug: '' });
       }
     } else {
-      // Create new
       const { data, error } = await supabase.from('qr_codes').insert([payload]).select().single();
       if (!error && data) {
         setQrCodes([data, ...qrCodes]);
@@ -175,15 +178,10 @@ export default function AdminDashboard() {
   };
 
   const downloadQR = async (slug: string) => {
-    // ⚠️ CRITICAL FIX: HARDCODE THE LIVE DOMAIN
-    // If we use window.location.origin, it prints "localhost" which breaks on phones.
     const PRODUCTION_DOMAIN = "https://dioxera.com"; 
-
-    // Construct the permanent tracking link
     const trackingUrl = `${PRODUCTION_DOMAIN}/qr/${slug}`;
     
     try {
-      // Use public API to generate PNG
       const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(trackingUrl)}`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -209,10 +207,10 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-black font-bold">D</div>
-            <span className="font-bold tracking-tight">ADMIN <span className="text-gray-500">PANEL</span></span>
+            <span className="font-bold tracking-tight">{t.header.title}</span>
           </div>
           <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="text-xs font-bold uppercase hover:text-brand-primary flex items-center gap-2">
-            <LogOut size={14} /> Logout
+            <LogOut size={14} /> {t.header.logout}
           </button>
         </div>
       </header>
@@ -221,10 +219,10 @@ export default function AdminDashboard() {
         
         {/* TABS */}
         <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit overflow-x-auto">
-          <TabButton active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} icon={<Package size={16}/>} label="Orders" count={orders.length} />
-          <TabButton active={activeTab === 'tickets'} onClick={() => setActiveTab('tickets')} icon={<MessageSquare size={16}/>} label="Tickets" count={tickets.filter(t => t.status === 'open').length} />
-          <TabButton active={activeTab === 'subscribers'} onClick={() => setActiveTab('subscribers')} icon={<Users size={16}/>} label="Users" count={subscribers.length} />
-          <TabButton active={activeTab === 'qrcode'} onClick={() => setActiveTab('qrcode')} icon={<QrCode size={16}/>} label="Dynamic QR" />
+          <TabButton active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} icon={<Package size={16}/>} label={t.tabs.orders} count={orders.length} />
+          <TabButton active={activeTab === 'tickets'} onClick={() => setActiveTab('tickets')} icon={<MessageSquare size={16}/>} label={t.tabs.tickets} count={tickets.filter(t => t.status === 'open').length} />
+          <TabButton active={activeTab === 'subscribers'} onClick={() => setActiveTab('subscribers')} icon={<Users size={16}/>} label={t.tabs.users} count={subscribers.length} />
+          <TabButton active={activeTab === 'qrcode'} onClick={() => setActiveTab('qrcode')} icon={<QrCode size={16}/>} label={t.tabs.qr} />
         </div>
 
         {/* =========================================================
@@ -235,11 +233,11 @@ export default function AdminDashboard() {
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-xs font-bold text-gray-400 uppercase">
                 <tr>
-                  <th className="p-4">ID</th>
-                  <th className="p-4">Customer</th>
-                  <th className="p-4">Total</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Action</th>
+                  <th className="p-4">{t.orders.id}</th>
+                  <th className="p-4">{t.orders.customer}</th>
+                  <th className="p-4">{t.orders.total}</th>
+                  <th className="p-4">{t.orders.status}</th>
+                  <th className="p-4 text-right">{t.orders.action}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -259,10 +257,12 @@ export default function AdminDashboard() {
                        <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${
                          order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 
                          order.payment_status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
-                       }`}>{order.payment_status}</span>
+                       }`}>
+                         {t.orders.statusOptions[order.payment_status as keyof typeof t.orders.statusOptions] || order.payment_status}
+                       </span>
                     </td>
                     <td className="p-4 text-right">
-                       <button className="text-brand-dark font-bold text-xs hover:underline">View</button>
+                       <button className="text-brand-dark font-bold text-xs hover:underline">{t.orders.view}</button>
                     </td>
                   </tr>
                 ))}
@@ -287,7 +287,7 @@ export default function AdminDashboard() {
                     <span className="text-xs text-gray-400">{new Date(ticket.created_at).toLocaleDateString()}</span>
                   </div>
                   <p className="text-sm text-gray-500 line-clamp-1">{ticket.message}</p>
-                  <p className="text-xs text-gray-400 mt-2">From: {ticket.user_email}</p>
+                  <p className="text-xs text-gray-400 mt-2">{t.tickets.from}: {ticket.user_email}</p>
                 </div>
               ))}
             </div>
@@ -318,13 +318,13 @@ export default function AdminDashboard() {
              {/* EDITOR BOX */}
              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-2">
-                 <Edit3 size={18} className="text-brand-dark"/> {isEditingQr ? 'Edit Link Destination' : 'Create New QR'}
+                 <Edit3 size={18} className="text-brand-dark"/> {isEditingQr ? t.qr.titleEdit : t.qr.titleNew}
                </h2>
                
                <div className="grid md:grid-cols-3 gap-4 items-end">
                  {/* Label Input */}
                  <div>
-                   <label className="text-xs font-bold uppercase text-gray-400">Label (Internal)</label>
+                   <label className="text-xs font-bold uppercase text-gray-400">{t.qr.label}</label>
                    <input 
                      value={qrForm.label} 
                      onChange={(e) => setQrForm({...qrForm, label: e.target.value})}
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
                  {/* Destination Input */}
                  <div className="md:col-span-2 flex gap-2">
                    <div className="flex-1">
-                     <label className="text-xs font-bold uppercase text-gray-400">Destination URL (Any Link)</label>
+                     <label className="text-xs font-bold uppercase text-gray-400">{t.qr.dest}</label>
                      <div className="relative">
                        <LinkIcon size={14} className="absolute left-3 top-3 text-gray-400" />
                        <input 
@@ -349,18 +349,18 @@ export default function AdminDashboard() {
                    </div>
                    
                    <button onClick={saveQrCode} className="bg-brand-dark text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition flex items-center gap-2 whitespace-nowrap">
-                     {isEditingQr ? 'Update Link' : <><Plus size={16}/> Create</>}
+                     {isEditingQr ? t.qr.btnUpdate : <><Plus size={16}/> {t.qr.btnCreate}</>}
                    </button>
                    
                    {isEditingQr && (
                      <button onClick={() => { setIsEditingQr(null); setQrForm({label:'', destination:'', slug:''}); }} className="bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold">
-                       Cancel
+                       {t.qr.btnCancel}
                      </button>
                    )}
                  </div>
                </div>
                <p className="text-[10px] text-gray-400 mt-2">
-                 * You can update the Destination URL anytime. The QR code image will remain valid.
+                 {t.qr.note}
                </p>
              </div>
 
@@ -369,11 +369,11 @@ export default function AdminDashboard() {
                <table className="w-full text-left text-sm">
                   <thead className="bg-gray-50 text-xs font-bold text-gray-400 uppercase">
                     <tr>
-                      <th className="p-4">Label</th>
-                      <th className="p-4 hidden md:table-cell">Smart Link (Print This)</th>
-                      <th className="p-4">Redirects To (Editable)</th>
-                      <th className="p-4 text-center">Scans</th>
-                      <th className="p-4 text-right">Actions</th>
+                      <th className="p-4">{t.qr.tableLabel}</th>
+                      <th className="p-4 hidden md:table-cell">{t.qr.tableSmart}</th>
+                      <th className="p-4">{t.qr.tableDest}</th>
+                      <th className="p-4 text-center">{t.qr.tableScans}</th>
+                      <th className="p-4 text-right">{t.qr.tableActions}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -397,7 +397,7 @@ export default function AdminDashboard() {
                       </tr>
                     ))}
                     {qrCodes.length === 0 && (
-                      <tr><td colSpan={5} className="p-8 text-center text-gray-400">No QR Codes created yet. Create one above!</td></tr>
+                      <tr><td colSpan={5} className="p-8 text-center text-gray-400">{t.qr.empty}</td></tr>
                     )}
                   </tbody>
                </table>
@@ -413,29 +413,29 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-6 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-2xl rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-              <h2 className="font-black text-xl">Order #{selectedOrder.id.slice(0, 8)}</h2>
+              <h2 className="font-black text-xl">{t.modalOrder.title}{selectedOrder.id.slice(0, 8)}</h2>
               <button onClick={() => setSelectedOrder(null)}><X size={24} className="text-gray-400 hover:text-black"/></button>
             </div>
             
             <div className="p-8 overflow-y-auto space-y-8">
               {/* Status Control */}
               <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <span className="text-xs font-bold uppercase text-gray-400">Current Status</span>
+                <span className="text-xs font-bold uppercase text-gray-400">{t.modalOrder.currentStatus}</span>
                 <select 
                   value={selectedOrder.payment_status}
                   onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
                   className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold uppercase outline-none focus:border-brand-dark cursor-pointer"
                 >
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="pending">{t.orders.statusOptions.pending}</option>
+                  <option value="paid">{t.orders.statusOptions.paid}</option>
+                  <option value="shipped">{t.orders.statusOptions.shipped}</option>
+                  <option value="cancelled">{t.orders.statusOptions.cancelled}</option>
                 </select>
               </div>
 
               {/* Items */}
               <div>
-                <h3 className="font-bold mb-3 flex items-center gap-2"><Package size={16}/> Items</h3>
+                <h3 className="font-bold mb-3 flex items-center gap-2"><Package size={16}/> {t.modalOrder.items}</h3>
                 <div className="border border-gray-100 rounded-xl overflow-hidden">
                   {selectedOrder.items.map((item: any, i: number) => (
                     <div key={i} className="flex justify-between p-3 border-b last:border-0 hover:bg-gray-50">
@@ -444,7 +444,7 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                   <div className="flex justify-between p-3 bg-gray-50 font-bold">
-                    <span>Total</span>
+                    <span>{t.orders.total}</span>
                     <span>€{selectedOrder.total_amount}</span>
                   </div>
                 </div>
@@ -453,15 +453,15 @@ export default function AdminDashboard() {
               {/* Customer Info */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <h3 className="font-bold mb-3 flex items-center gap-2"><Users size={16}/> Customer</h3>
+                  <h3 className="font-bold mb-3 flex items-center gap-2"><Users size={16}/> {t.modalOrder.customer}</h3>
                   <div className="text-sm text-gray-600">
                     <p>{selectedOrder.customer_email}</p>
                     <p>{selectedOrder.customer_details?.firstName} {selectedOrder.customer_details?.lastName}</p>
-                    <p className="mt-2 text-xs text-gray-400 uppercase font-bold">Paid via {selectedOrder.payment_method}</p>
+                    <p className="mt-2 text-xs text-gray-400 uppercase font-bold">{t.modalOrder.paidVia} {selectedOrder.payment_method}</p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold mb-3 flex items-center gap-2"><Truck size={16}/> Shipping</h3>
+                  <h3 className="font-bold mb-3 flex items-center gap-2"><Truck size={16}/> {t.modalOrder.shipping}</h3>
                   <div className="text-sm text-gray-600">
                     <p>{selectedOrder.customer_details?.address}</p>
                     <p>{selectedOrder.customer_details?.city}, {selectedOrder.customer_details?.postalCode}</p>
@@ -475,7 +475,7 @@ export default function AdminDashboard() {
                 target="_blank"
                 className="w-full flex items-center justify-center gap-2 bg-brand-dark text-white py-4 rounded-xl font-bold hover:bg-black transition"
               >
-                <Download size={18} /> Download Official Invoice PDF
+                <Download size={18} /> {t.modalOrder.downloadInvoice}
               </a>
             </div>
           </div>
@@ -499,8 +499,8 @@ export default function AdminDashboard() {
                      onChange={(e) => updateTicketStatus(selectedTicket.id, e.target.value)}
                      className="text-[10px] uppercase font-bold bg-white border rounded px-1"
                    >
-                     <option value="open">Open</option>
-                     <option value="resolved">Resolved</option>
+                     <option value="open">{t.chat.open}</option>
+                     <option value="resolved">{t.chat.resolved}</option>
                    </select>
                 </div>
               </div>
@@ -511,7 +511,7 @@ export default function AdminDashboard() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
               <div className="flex justify-start">
                 <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
-                  <p className="font-bold text-xs text-brand-dark mb-1">Customer</p>
+                  <p className="font-bold text-xs text-brand-dark mb-1">{t.chat.customer}</p>
                   {selectedTicket.message}
                 </div>
               </div>
@@ -537,7 +537,7 @@ export default function AdminDashboard() {
                 <input 
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Type a reply..."
+                  placeholder={t.chat.placeholder}
                   className="flex-1 bg-gray-100 border-0 rounded-full px-4 text-sm focus:ring-2 focus:ring-brand-dark outline-none"
                 />
                 <button type="submit" className="p-3 bg-brand-primary text-brand-dark rounded-full hover:brightness-110">

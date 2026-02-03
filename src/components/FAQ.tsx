@@ -1,22 +1,26 @@
 "use client";
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
-
-const faqs = [
-  { q: "How long does the generator take to produce a batch?", a: "The Gen-1 system produces 500ml of 3000 PPM solution in approximately 45 minutes." },
-  { q: "Is it safe to use at home?", a: "Yes. Unlike manual mixing which releases gas, our hermetically sealed chamber prevents any gas leakage, making it safe for indoor use." },
-  { q: "What maintenance is required?", a: "We recommend flushing the system with distilled water after every 5 uses. The reaction chamber should be replaced annually." },
-  { q: "Do you ship internationally?", a: "Yes, we ship from Switzerland to anywhere in Europe and North America via DHL Express." },
-];
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
 
 export default function FAQ() {
+  const { language } = useAppStore();
+  const t = dictionary[language].faq;
   const [open, setOpen] = useState<number | null>(0);
+
+  const faqs = [
+    { q: t.q1, a: t.a1 },
+    { q: t.q2, a: t.a2 },
+    { q: t.q3, a: t.a3 },
+    { q: t.q4, a: t.a4 },
+  ];
 
   return (
     <section className="py-24 bg-gray-50">
       <div className="container px-6 mx-auto max-w-3xl">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-black tracking-tight mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-black tracking-tight mb-4">{t.heading}</h2>
         </div>
 
         <div className="space-y-4">

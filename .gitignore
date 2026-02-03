@@ -48,5 +48,5 @@ next-env.d.ts
 .env.test.local
 .env.production.local
 node_modules/
-.next/.env
-env
+.next/
+

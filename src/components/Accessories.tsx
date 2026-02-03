@@ -1,14 +1,29 @@
+"use client";
+
 import Link from 'next/link';
 import { ArrowUpRight, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
+import { useEffect, useState } from 'react';
 
-export default async function Accessories() {
-  // Fetch ONLY Sodium Chlorite and Water Distiller
-  const { data: accessories } = await supabase
-    .from('products')
-    .select('*')
-    .or('slug.eq.sodium-chlorite-28,slug.eq.water-distiller-pro')
-    .order('price', { ascending: true }); // Show cheaper item first
+export default function Accessories() {
+  const { language } = useAppStore();
+  const t = dictionary[language].accessories;
+  const [accessories, setAccessories] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchAccessories() {
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .or('slug.eq.sodium-chlorite-28,slug.eq.water-distiller-pro')
+        .order('price', { ascending: true });
+      
+      if (data) setAccessories(data);
+    }
+    fetchAccessories();
+  }, []);
 
   if (!accessories || accessories.length === 0) return null;
 
@@ -17,23 +32,21 @@ export default async function Accessories() {
       <div className="container px-6 mx-auto">
         <div className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-4xl font-black tracking-tight mb-2 text-brand-dark">Essential Supplies</h2>
-            <p className="text-gray-500">Required for the operation of your Dioxera 3000.</p>
+            <h2 className="text-4xl font-black tracking-tight mb-2 text-brand-dark">{t.heading}</h2>
+            <p className="text-gray-500">{t.subheading}</p>
           </div>
           <Link href="/products" className="hidden md:flex items-center gap-2 font-bold text-brand-dark hover:text-brand-primary transition">
-            View full catalog <ArrowUpRight size={18} />
+            {t.viewCatalog} <ArrowUpRight size={18} />
           </Link>
         </div>
 
-        {/* Grid adjusted for 2 items to look good */}
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {accessories.map((item) => (
             <Link href={`/products/${item.id}`} key={item.id} className="group block">
               
-              {/* Product Card Image */}
               <div className="bg-gray-50 rounded-[2rem] aspect-[4/3] mb-6 flex items-center justify-center group-hover:bg-gray-100 transition-colors relative overflow-hidden border border-gray-100">
                 <div className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-100 z-10 shadow-sm">
-                  Essential
+                  {t.essentialBadge}
                 </div>
                 
                 {item.image ? (
@@ -48,7 +61,6 @@ export default async function Accessories() {
                 )}
               </div>
 
-              {/* Product Info */}
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-xl text-brand-dark group-hover:text-brand-primary transition-colors line-clamp-1">
@@ -64,10 +76,9 @@ export default async function Accessories() {
           ))}
         </div>
         
-        {/* Mobile View All Button */}
         <div className="mt-10 md:hidden">
             <Link href="/products" className="w-full py-4 rounded-full border border-gray-200 font-bold flex items-center justify-center gap-2 hover:bg-gray-50">
-                View Full Catalog
+                {t.viewAllMobile}
             </Link>
         </div>
       </div>

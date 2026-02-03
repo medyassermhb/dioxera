@@ -1,6 +1,7 @@
 "use client";
 
-import { useCart } from "@/lib/store";
+import { useAppStore } from "@/lib/store"; // FIXED IMPORT
+import { dictionary } from "@/lib/dictionary"; // IMPORT DICTIONARY
 import { useState } from "react";
 import { 
   Truck, User, MapPin, Smartphone, ToggleLeft, ToggleRight, 
@@ -10,7 +11,9 @@ import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function CheckoutForm() {
-  const { items, clearCart } = useCart();
+  const { items, clearCart, language } = useAppStore(); // FIXED HOOK
+  const t = dictionary[language].checkout.form;
+  
   const router = useRouter();
   
   // -- Local State --
@@ -34,7 +37,7 @@ export default function CheckoutForm() {
   const shippingCost = subtotal > 150 ? 0 : 25; 
   const total = subtotal + shippingCost;
 
-  // -- Main Submission Handler (Stripe & Bank) --
+  // -- Main Submission Handler --
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -83,7 +86,6 @@ export default function CheckoutForm() {
     }
   };
 
-  // -- PayPal Success Handler --
   const handlePayPalApprove = async (data: any, actions: any) => {
     try {
       const details = await actions.order.capture();
@@ -125,15 +127,15 @@ export default function CheckoutForm() {
         <section>
           <div className="flex items-center gap-3 mb-6 pb-2 border-b border-gray-100">
              <div className="w-8 h-8 bg-brand-secondary/20 rounded-lg flex items-center justify-center text-brand-dark"><User size={18}/></div>
-             <h3 className="font-bold uppercase tracking-widest text-sm text-gray-800">Contact Details</h3>
+             <h3 className="font-bold uppercase tracking-widest text-sm text-gray-800">{t.contact}</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-5">
              <div className="md:col-span-2">
-               <label className="input-label">Email Address</label>
+               <label className="input-label">{t.email}</label>
                <input required name="email" type="email" className="input-field" placeholder="you@example.com" onChange={handleInputChange} />
              </div>
              <div className="relative md:col-span-2">
-                <label className="input-label">Phone Number</label>
+                <label className="input-label">{t.phone}</label>
                 <Smartphone size={18} className="absolute top-[38px] left-4 text-gray-400 z-10" />
                 <input required name="phone" type="tel" className="input-field pl-12" placeholder="+1 (555) 000-0000" onChange={handleInputChange} />
              </div>
@@ -144,38 +146,38 @@ export default function CheckoutForm() {
         <section>
           <div className="flex items-center gap-3 mb-6 pb-2 border-b border-gray-100">
              <div className="w-8 h-8 bg-brand-secondary/20 rounded-lg flex items-center justify-center text-brand-dark"><Truck size={18}/></div>
-             <h3 className="font-bold uppercase tracking-widest text-sm text-gray-800">Shipping Address</h3>
+             <h3 className="font-bold uppercase tracking-widest text-sm text-gray-800">{t.shipping}</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-5">
              <div>
-               <label className="input-label">First Name</label>
+               <label className="input-label">{t.firstName}</label>
                <input required name="firstName" className="input-field" placeholder="John" onChange={handleInputChange} />
              </div>
              <div>
-               <label className="input-label">Last Name</label>
+               <label className="input-label">{t.lastName}</label>
                <input required name="lastName" className="input-field" placeholder="Doe" onChange={handleInputChange} />
              </div>
              
              <div className="md:col-span-2">
-               <label className="input-label">Street Address</label>
+               <label className="input-label">{t.street}</label>
                <input required name="address" className="input-field" placeholder="123 Innovation Blvd" onChange={handleInputChange} />
              </div>
              
              <div>
-               <label className="input-label">City</label>
+               <label className="input-label">{t.city}</label>
                <input required name="city" className="input-field" placeholder="New York" onChange={handleInputChange} />
              </div>
              
              <div>
-               <label className="input-label">ZIP / Postal Code</label>
+               <label className="input-label">{t.zip}</label>
                <input required name="postalCode" className="input-field" placeholder="10001" onChange={handleInputChange} />
              </div>
              
              <div className="md:col-span-2">
-               <label className="input-label flex items-center gap-2"><Globe size={12}/> Country / Region</label>
+               <label className="input-label flex items-center gap-2"><Globe size={12}/> {t.country}</label>
                <div className="relative">
                  <select required name="country" defaultValue="" className="input-field bg-white appearance-none cursor-pointer" onChange={handleInputChange}>
-                    <option value="" disabled>Select Country...</option>
+                    <option value="" disabled>{t.selectCountry}</option>
                     <option value="US">United States</option>
                     <option value="CA">Canada</option>
                     <option value="GB">United Kingdom</option>
@@ -196,8 +198,8 @@ export default function CheckoutForm() {
               <div className="flex items-center gap-4">
                  <div className="bg-white p-2 rounded-lg border border-gray-200"><MapPin size={20} className="text-gray-500"/></div>
                  <div>
-                    <span className="font-bold text-sm text-gray-900 block">Billing address is same as shipping</span>
-                    <span className="text-xs text-gray-400">Uncheck to enter a different billing address</span>
+                    <span className="font-bold text-sm text-gray-900 block">{t.billingSame}</span>
+                    <span className="text-xs text-gray-400">{t.billingDiff}</span>
                  </div>
               </div>
               <div className="transform group-hover:scale-110 transition-transform">
@@ -207,12 +209,12 @@ export default function CheckoutForm() {
 
            {!sameAsShipping && (
               <div className="mt-8 grid md:grid-cols-2 gap-5 border-t border-gray-200 pt-8 animate-in fade-in slide-in-from-top-4">
-                 <div className="md:col-span-2"><h4 className="font-bold text-sm uppercase tracking-widest mb-4">Billing Details</h4></div>
-                 <div><input required name="billingFirstName" className="input-field" placeholder="First Name" /></div>
-                 <div><input required name="billingLastName" className="input-field" placeholder="Last Name" /></div>
-                 <div className="md:col-span-2"><input required name="billingAddress" className="input-field" placeholder="Billing Address" /></div>
-                 <div><input required name="billingCity" className="input-field" placeholder="City" /></div>
-                 <div><input required name="billingZip" className="input-field" placeholder="ZIP Code" /></div>
+                 <div className="md:col-span-2"><h4 className="font-bold text-sm uppercase tracking-widest mb-4">{t.billingTitle}</h4></div>
+                 <div><input required name="billingFirstName" className="input-field" placeholder={t.firstName} /></div>
+                 <div><input required name="billingLastName" className="input-field" placeholder={t.lastName} /></div>
+                 <div className="md:col-span-2"><input required name="billingAddress" className="input-field" placeholder={t.street} /></div>
+                 <div><input required name="billingCity" className="input-field" placeholder={t.city} /></div>
+                 <div><input required name="billingZip" className="input-field" placeholder={t.zip} /></div>
               </div>
            )}
         </section>
@@ -221,28 +223,28 @@ export default function CheckoutForm() {
         <section>
           <div className="flex items-center gap-3 mb-6 pb-2 border-b border-gray-100">
              <div className="w-8 h-8 bg-brand-secondary/20 rounded-lg flex items-center justify-center text-brand-dark"><Lock size={18}/></div>
-             <h3 className="font-bold uppercase tracking-widest text-sm text-gray-800">Payment Method</h3>
+             <h3 className="font-bold uppercase tracking-widest text-sm text-gray-800">{t.paymentTitle}</h3>
           </div>
           
           <div className="grid md:grid-cols-3 gap-4 mb-6">
             <PaymentOption 
               selected={paymentMethod === 'stripe'} 
               onClick={() => setPaymentMethod('stripe')}
-              title="Credit Card"
+              title={t.cc}
               icon={<CreditCard className="text-gray-600"/>}
               badges={["VISA", "MC", "AMEX"]}
             />
             <PaymentOption 
               selected={paymentMethod === 'paypal'} 
               onClick={() => setPaymentMethod('paypal')}
-              title="PayPal"
+              title={t.paypal}
               icon={<Wallet className="text-[#003087]"/>}
               badges={["PayPal", "Card"]}
             />
             <PaymentOption 
               selected={paymentMethod === 'bank_transfer'} 
               onClick={() => setPaymentMethod('bank_transfer')}
-              title="Bank Transfer"
+              title={t.bank}
               icon={<Building2 className="text-gray-600"/>}
               badges={["Wise", "SWIFT"]}
             />
@@ -252,9 +254,9 @@ export default function CheckoutForm() {
              <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 text-sm flex gap-4 items-start mb-6 animate-in fade-in">
                 <div className="bg-blue-100 p-2 rounded-full text-blue-600 mt-1"><Building2 size={16}/></div>
                 <div>
-                  <p className="font-bold text-blue-900 mb-1">Bank Transfer Instructions</p>
+                  <p className="font-bold text-blue-900 mb-1">{t.bankInstructions}</p>
                   <p className="text-blue-700/80 leading-relaxed">
-                    You will receive our IBAN and invoice via email immediately. Your order ships once funds clear.
+                    {t.bankDesc}
                   </p>
                 </div>
              </div>
@@ -274,7 +276,7 @@ export default function CheckoutForm() {
                       return Promise.reject(new Error("Missing fields"));
                    }
                    return actions.order.create({
-                     intent: "CAPTURE", // <--- FIX IS HERE
+                     intent: "CAPTURE",
                      purchase_units: [{
                        amount: { 
                          currency_code: "EUR", 
@@ -294,10 +296,10 @@ export default function CheckoutForm() {
                className="w-full py-6 bg-brand-dark text-white rounded-full font-black text-xl flex items-center justify-center gap-3 hover:bg-brand-primary hover:text-brand-dark transition-all disabled:opacity-50 shadow-xl hover:shadow-2xl hover:shadow-brand-dark/20 active:scale-[0.99] duration-300"
              >
                {loading ? (
-                 <><Loader2 className="animate-spin" /> PROCESSING...</>
+                 <><Loader2 className="animate-spin" /> {t.processing}</>
                ) : (
                  <>
-                   {paymentMethod === 'stripe' ? `PAY €${total.toFixed(2)}` : "PLACE ORDER"} 
+                   {paymentMethod === 'stripe' ? `${t.pay} €${total.toFixed(2)}` : t.placeOrder} 
                    {paymentMethod === 'stripe' ? <Lock size={20}/> : <CheckCircle2 size={20}/>}
                  </>
                )}

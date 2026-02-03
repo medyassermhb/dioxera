@@ -1,14 +1,28 @@
+"use client";
+
 import Link from 'next/link';
 import { Check, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
+import { useEffect, useState } from 'react';
 
-export default async function ProductSpotlight() {
-  // Fetch specifically the DIOXERA 3000
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', 'dioxera-3000') // Targets the new main product
-    .single();
+export default function ProductSpotlight() {
+  const { language } = useAppStore();
+  const t = dictionary[language].spotlight;
+  const [product, setProduct] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', 'dioxera-3000')
+        .single();
+      setProduct(data);
+    }
+    fetchProduct();
+  }, []);
 
   if (!product) return null;
 
@@ -24,7 +38,7 @@ export default async function ProductSpotlight() {
             {/* Left: Text */}
             <div className="lg:w-1/2 space-y-8">
               <div className="inline-block px-4 py-1 rounded-full border border-brand-primary/30 text-brand-primary text-xs font-bold uppercase tracking-widest animate-pulse">
-                New Release
+                {t.newRelease}
               </div>
               
               <h2 className="text-4xl lg:text-6xl font-black tracking-tighter">
@@ -32,11 +46,11 @@ export default async function ProductSpotlight() {
               </h2>
               
               <p className="text-gray-400 text-lg leading-relaxed max-w-md">
-                The ultimate automated CDL production system. Generates exactly 3000 PPM solution with Swiss precision.
+                {t.description}
               </p>
               
               <ul className="space-y-4">
-                {['3000 PPM Precision', 'Fully Automated Cycle', 'Zero-Leak Technology', 'Medical Grade Materials'].map((item) => (
+                {t.features.map((item) => (
                   <li key={item} className="flex items-center gap-3 font-medium text-gray-300">
                     <div className="w-6 h-6 rounded-full bg-brand-primary flex items-center justify-center text-brand-dark">
                       <Check size={14} strokeWidth={4} />
@@ -48,10 +62,10 @@ export default async function ProductSpotlight() {
 
               <div className="pt-8 flex flex-wrap gap-4">
                 <Link href={`/products/${product.id}`} className="px-10 py-5 bg-white text-brand-dark rounded-full font-bold hover:bg-brand-primary transition-all text-lg flex items-center gap-2 shadow-lg hover:shadow-xl">
-                  Buy Now - €{product.price} <ArrowRight size={18}/>
+                  {t.buyNow} - €{product.price} <ArrowRight size={18}/>
                 </Link>
                 <Link href="/technology" className="px-10 py-5 border border-white/20 text-white rounded-full font-bold hover:bg-white/10 transition-all text-lg">
-                  See Technology
+                  {t.seeTech}
                 </Link>
               </div>
             </div>

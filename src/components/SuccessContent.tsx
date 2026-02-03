@@ -1,10 +1,16 @@
+// src/components/SuccessContent.tsx
 "use client";
 
 import { useState } from 'react';
 import { CheckCircle2, Copy, ShieldCheck, Download, ExternalLink, ArrowRight, Building2, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
 
 export default function SuccessContent({ id, isBankTransfer }: { id: string, isBankTransfer: boolean }) {
+  const { language } = useAppStore();
+  const t = dictionary[language].success;
+
   const [confirmed, setConfirmed] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -16,6 +22,7 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
 
   const IBAN = "CH93 0000 0000 0000 0000 0";
   const BIC = "WISECHZZ";
+  const displayId = id !== "UNKNOWN" ? id.slice(0, 8).toUpperCase() : "...";
 
   return (
     <div className="max-w-2xl mx-auto text-center animate-in fade-in duration-500">
@@ -26,24 +33,24 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
       </div>
 
       <h1 className="text-4xl font-black tracking-tighter mb-4 text-brand-dark">
-        {isBankTransfer ? 'Order Placed!' : 'Payment Successful!'}
+        {isBankTransfer ? t.titleBank : t.titleCard}
       </h1>
       
       <p className="text-gray-500 text-lg mb-8">
-        Order <span className="font-mono font-bold text-brand-dark bg-gray-100 px-2 py-1 rounded">#{id !== "UNKNOWN" ? id.slice(0, 8).toUpperCase() : "..."}</span> has been recorded.
+        {t.orderRecorded.replace('#{id}', '')} <span className="font-mono font-bold text-brand-dark bg-gray-100 px-2 py-1 rounded">#{displayId}</span>
       </p>
 
       {/* --- SCENARIO A: STRIPE (Instant Download) --- */}
       {!isBankTransfer && id !== "UNKNOWN" && (
         <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-xl mb-10 animate-in slide-in-from-bottom-4">
-           <h3 className="text-xl font-bold mb-2">Thank you for your purchase.</h3>
-           <p className="text-gray-500 mb-8">A confirmation email has been sent to you.</p>
+           <h3 className="text-xl font-bold mb-2">{t.cardMessage}</h3>
+           <p className="text-gray-500 mb-8"></p>
            
            <a 
              href={`/api/download-invoice?id=${id}`} 
              className="w-full py-4 bg-brand-dark text-white rounded-xl font-bold text-lg hover:bg-brand-primary hover:text-brand-dark transition-all flex items-center justify-center gap-2 shadow-lg"
            >
-             <Download size={20} /> Download Official Invoice
+             <Download size={20} /> {t.downloadBtn}
            </a>
         </div>
       )}
@@ -59,27 +66,27 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
                 <Building2 size={24} className="text-brand-primary" />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Bank Transfer Details</h3>
+                <h3 className="font-bold text-lg">{t.bankTitle}</h3>
                 <p className="text-xs text-gray-400 uppercase tracking-widest">
-                  {confirmed ? "Payment Reported" : "Payment Pending"}
+                  {confirmed ? t.reported : t.pending}
                 </p>
               </div>
             </div>
-            {confirmed && <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Confirmed</div>}
+            {confirmed && <div className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">{t.confirmedBadge}</div>}
           </div>
           
           <div className="p-8 space-y-6">
             {!confirmed ? (
               <>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Please copy the details below or use the Wise link. <br/>
-                  <strong className="text-red-500">Crucial:</strong> Use <span className="font-mono bg-gray-100 px-1 rounded text-black">#{id.slice(0, 8)}</span> as reference.
+                  {t.bankInstructions} <br/>
+                  <strong className="text-red-500">{t.crucial}:</strong> {t.useRef.split('#{ref}')[0]} <span className="font-mono bg-gray-100 px-1 rounded text-black">#{displayId}</span> {t.useRef.split('#{ref}')[1]}
                 </p>
 
                 <div className="space-y-3 bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                  <CopyRow label="IBAN" value={IBAN} onCopy={() => handleCopy(IBAN, 'iban')} isCopied={copiedField === 'iban'} />
-                  <CopyRow label="BIC / SWIFT" value={BIC} onCopy={() => handleCopy(BIC, 'bic')} isCopied={copiedField === 'bic'} />
-                  <CopyRow label="Reference" value={`Order #${id.slice(0, 8)}`} onCopy={() => handleCopy(id.slice(0,8), 'ref')} isCopied={copiedField === 'ref'} />
+                  <CopyRow label={t.copy.iban} value={IBAN} onCopy={() => handleCopy(IBAN, 'iban')} isCopied={copiedField === 'iban'} />
+                  <CopyRow label={t.copy.bic} value={BIC} onCopy={() => handleCopy(BIC, 'bic')} isCopied={copiedField === 'bic'} />
+                  <CopyRow label={t.copy.ref} value={`Order #${displayId}`} onCopy={() => handleCopy(displayId, 'ref')} isCopied={copiedField === 'ref'} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-2">
@@ -87,13 +94,13 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
                     href="#" 
                     className="flex items-center justify-center gap-2 py-4 rounded-xl border-2 border-brand-dark font-bold text-brand-dark hover:bg-gray-50 transition"
                   >
-                    <ExternalLink size={18}/> Pay with Wise
+                    <ExternalLink size={18}/> {t.payWise}
                   </a>
                   <button 
                     onClick={() => setConfirmed(true)}
                     className="flex items-center justify-center gap-2 py-4 rounded-xl bg-brand-dark text-white font-bold hover:bg-brand-primary hover:text-brand-dark transition shadow-lg"
                   >
-                    <CheckCircle2 size={18}/> I Have Paid
+                    <CheckCircle2 size={18}/> {t.iHavePaid}
                   </button>
                 </div>
               </>
@@ -102,16 +109,16 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ShieldCheck size={32} className="text-green-600"/>
                  </div>
-                 <h3 className="text-2xl font-black text-brand-dark mb-2">Thank you!</h3>
+                 <h3 className="text-2xl font-black text-brand-dark mb-2">{t.thankYou}</h3>
                  <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                   We have notified our team to look for your transfer. Your order will ship as soon as funds clear.
+                   {t.notifyMessage}
                  </p>
                  
                  <a 
                    href={`/api/download-invoice?id=${id}`} 
                    className="inline-flex items-center gap-2 px-8 py-4 bg-brand-primary text-brand-dark rounded-full font-bold text-lg hover:bg-white border border-brand-primary hover:border-gray-200 transition shadow-xl"
                  >
-                   <FileText size={20} /> Download Invoice PDF
+                   <FileText size={20} /> {t.downloadPdf}
                  </a>
               </div>
             )}
@@ -122,10 +129,10 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
       {/* Footer Links */}
       <div className="flex justify-center gap-4">
         <Link href="/" className="px-8 py-4 bg-gray-100 rounded-full font-bold text-gray-600 hover:bg-gray-200 transition">
-          Return Home
+          {t.returnHome}
         </Link>
         <Link href="/products" className="px-8 py-4 bg-white border border-gray-200 rounded-full font-bold hover:border-brand-dark transition flex items-center gap-2">
-          Continue Shopping <ArrowRight size={18} />
+          {t.continueShopping} <ArrowRight size={18} />
         </Link>
       </div>
     </div>

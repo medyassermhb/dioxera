@@ -68,14 +68,24 @@ export async function sendNewsletterWelcome(email: string) {
 }
 
 // 2. Handle Contact Form (User Receipt + Admin Alert)
-export async function sendContactEmails(data: { name: string; email: string; message: string }) {
+interface ContactEmailData {
+  name: string;
+  email: string;
+  message: string;
+  phone?: string;
+  subject?: string;
+}
+
+export async function sendContactEmails(data: ContactEmailData) {
   if (!user || !pass) return false;
+
+  const subjectLine = data.subject || "New Inquiry";
 
   try {
     // A. Send Receipt to User
     const userContent = `
       <p>Dear ${data.name},</p>
-      <p>We have received your message. Our team is reviewing your inquiry and will respond shortly.</p>
+      <p>We have received your message regarding "<strong>${subjectLine}</strong>". Our team is reviewing your inquiry and will respond shortly.</p>
       <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid ${BRAND_COLOR}; margin: 20px 0;">
         <strong>Your Message:</strong><br/>
         <em style="color: #666;">"${data.message}"</em>
@@ -93,6 +103,8 @@ export async function sendContactEmails(data: { name: string; email: string; mes
     if (adminEmail) {
       const adminContent = `
         <p><strong>From:</strong> ${data.name} (<a href="mailto:${data.email}">${data.email}</a>)</p>
+        <p><strong>Phone:</strong> ${data.phone || 'Not provided'}</p>
+        <p><strong>Subject:</strong> ${subjectLine}</p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 16px;">${data.message.replace(/\n/g, '<br>')}</p>
       `;
@@ -100,8 +112,8 @@ export async function sendContactEmails(data: { name: string; email: string; mes
       await transporter.sendMail({
         from: `"Contact Form" <${user}>`,
         to: adminEmail,
-        replyTo: data.email, // Allows you to just click "Reply"
-        subject: `[CONTACT] New Message from ${data.name}`,
+        replyTo: data.email, 
+        subject: `[CONTACT] ${subjectLine} - ${data.name}`,
         html: wrapHtml("New Inquiry", adminContent),
       });
     }

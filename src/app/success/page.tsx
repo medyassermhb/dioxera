@@ -1,3 +1,4 @@
+// src/app/success/page.tsx
 import Header from '@/components/layout/Navbar';
 import Footer from '@/components/Footer';
 import SuccessContent from '@/components/SuccessContent';

@@ -1,11 +1,14 @@
+// src/components/AddToCartButton.tsx
 "use client";
 
-import { useCart } from "@/lib/store";
+import { useAppStore } from "@/lib/store"; // FIXED IMPORT
+import { dictionary } from "@/lib/dictionary";
 import { ShoppingBag, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 
 export default function AddToCartButton({ product }: { product: any }) {
-  const { addItem } = useCart();
+  const { addItem, language } = useAppStore();
+  const t = dictionary[language];
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
@@ -30,9 +33,9 @@ export default function AddToCartButton({ product }: { product: any }) {
       }`}
     >
       {added ? (
-        <>ADDED <CheckCircle2 size={20} /></>
+        <> {t.cart.added} <CheckCircle2 size={20} /></>
       ) : (
-        <>ADD TO CART <ShoppingBag size={20} /></>
+        <> {t.cart.addToCart} <ShoppingBag size={20} /></>
       )}
     </button>
   );

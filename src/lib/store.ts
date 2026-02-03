@@ -1,3 +1,4 @@
+// src/lib/store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -9,23 +10,34 @@ export interface CartItem {
   quantity: number;
 }
 
-interface CartStore {
+export type Language = 'en' | 'fr';
+
+interface AppStore {
+  // Cart State
   items: CartItem[];
-  isOpen: boolean; // Add this
+  isCartOpen: boolean; // Renamed from isOpen to be more specific
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
-  toggleCart: () => void; // Add this
-  openCart: () => void;   // Add this
-  closeCart: () => void;  // Add this
+  
+  // Cart Actions
+  toggleCart: () => void;
+  openCart: () => void;   // Restored
+  closeCart: () => void;  // Restored
+
+  // Language State
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  toggleLanguage: () => void;
 }
 
-export const useCart = create<CartStore>()(
+export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
+      // --- Cart Logic ---
       items: [],
-      isOpen: false, // Default closed
-
+      isCartOpen: false,
+      
       addItem: (item) =>
         set((state) => {
           const existing = state.items.find((i) => i.id === item.id);
@@ -34,12 +46,12 @@ export const useCart = create<CartStore>()(
               items: state.items.map((i) =>
                 i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
               ),
-              isOpen: true, // Open cart automatically when adding
+              isCartOpen: true, 
             };
           }
           return { 
             items: [...state.items, { ...item, quantity: 1 }],
-            isOpen: true 
+            isCartOpen: true 
           };
         }),
 
@@ -49,15 +61,21 @@ export const useCart = create<CartStore>()(
         })),
 
       clearCart: () => set({ items: [] }),
+      
+      toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
+      openCart: () => set({ isCartOpen: true }),
+      closeCart: () => set({ isCartOpen: false }),
 
-      // Toggle Logic
-      toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
-      openCart: () => set({ isOpen: true }),
-      closeCart: () => set({ isOpen: false }),
+      // --- Language Logic ---
+      language: 'en',
+      setLanguage: (lang) => set({ language: lang }),
+      toggleLanguage: () => set((state) => ({ 
+        language: state.language === 'en' ? 'fr' : 'en' 
+      })),
     }),
     {
-      name: 'dioxera-cart', // Unique name for local storage
-      skipHydration: true,  // Helps with Next.js hydration mismatch
+      name: 'dioxera-storage',
+      skipHydration: true,
     }
   )
 );
