@@ -1,17 +1,18 @@
 // src/app/reset-password/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { dictionary } from '@/lib/dictionary';
-import Link from 'next/link';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const { language } = useAppStore();
-  const t = dictionary[language].resetPassword;
+  // Safe check in case dictionary[language] is undefined, defaulting to 'en' or similar if needed
+  // Assuming dictionary structure is consistent based on your previous code
+  const t = dictionary[language]?.resetPassword || dictionary['en'].resetPassword;
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -141,5 +142,18 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Wrap the content in Suspense to fix the build error
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#111] flex items-center justify-center text-white">
+        <Loader2 className="animate-spin text-brand-primary" size={40} />
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
