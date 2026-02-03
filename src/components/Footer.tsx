@@ -1,4 +1,4 @@
-"use client"; // Needs client for language access
+"use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -7,8 +7,12 @@ import { useAppStore } from '@/lib/store';
 import { dictionary } from '@/lib/dictionary';
 
 export default function Footer() {
-  const { language } = useAppStore();
+  const { language, setLanguage } = useAppStore();
   const t = dictionary[language].footer;
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'fr' : 'en');
+  };
 
   return (
     <footer className="bg-brand-dark text-white pt-24 pb-12 px-6 border-t border-neutral-800">
@@ -78,7 +82,12 @@ export default function Footer() {
         <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-4 font-bold tracking-wide">
           <p>© {new Date().getFullYear()} {t.rights}</p>
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1 hover:text-white cursor-pointer transition"><Globe size={14}/> {language === 'en' ? 'Worldwide (EN)' : 'Monde (FR)'}</span>
+            <button 
+              onClick={toggleLanguage}
+              className="flex items-center gap-1 hover:text-white cursor-pointer transition"
+            >
+              <Globe size={14}/> {language === 'en' ? 'Worldwide (EN)' : 'Monde (FR)'}
+            </button>
             <Link href="/privacy" className="hover:text-white transition">{t.privacy}</Link>
             <Link href="/terms" className="hover:text-white transition">{t.terms}</Link>
           </div>

@@ -1,7 +1,6 @@
-// src/components/AddToCartButton.tsx
 "use client";
 
-import { useAppStore } from "@/lib/store"; // FIXED IMPORT
+import { useAppStore } from "@/lib/store";
 import { dictionary } from "@/lib/dictionary";
 import { ShoppingBag, CheckCircle2 } from "lucide-react";
 import { useState } from "react";

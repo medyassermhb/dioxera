@@ -111,8 +111,8 @@ export const dictionary = {
       joined: "Joined",
       spam: "No Spam. Unsubscribe Anytime."
     },
-    footer: {
-      tagline: "Leading the world in high-purity CDL generation technology. Swiss design, global impact.", // Restored Swiss
+footer: {
+      tagline: "Leading the world in high-purity CDL generation technology. Swiss engineering, global impact.",
       col1: "Products",
       col2: "Support",
       col3: "Newsletter",
@@ -121,11 +121,10 @@ export const dictionary = {
       shipping: "Global Shipping",
       warranty: "Warranty Claims",
       help: "Help Center",
-      rights: "EVER CARE EUROPE SRL. ALL RIGHTS RESERVED.", // Updated Company Name
-      privacy: "Privacy Policy",
-      terms: "Terms of Service",
       joinBtn: "JOIN",
-      worldwide: "Worldwide"
+      rights: "DIOXERA TECHNOLOGY. ALL RIGHTS RESERVED.",
+      privacy: "Privacy Policy",
+      terms: "Terms of Service"
     },
     shop: {
       title: "Catalog.",
@@ -602,21 +601,20 @@ form: {
       joined: "Inscrit",
       spam: "Pas de Spam. Désinscription à tout moment."
     },
-    footer: {
-      tagline: "Leader mondial de la technologie de génération de CDL haute pureté. Design suisse, impact mondial.", // "ingénierie" -> "design"
+footer: {
+      tagline: "Leader mondial de la technologie de génération de CDL haute pureté. Ingénierie suisse, impact mondial.",
       col1: "Produits",
       col2: "Support",
       col3: "Newsletter",
       col3_desc: "Rejoignez le cercle d'élite des propriétaires Dioxera.",
-      contact: "Contactez-nous",
-      shipping: "Expédition Mondiale",
-      warranty: "Réclamations Garantie",
+      contact: "Nous Contacter",
+      shipping: "Livraison Mondiale",
+      warranty: "Garantie",
       help: "Centre d'Aide",
-      rights: "EVER CARE EUROPE SRL. TOUS DROITS RÉSERVÉS.", // Updated Company Name
-      privacy: "Politique de Confidentialité",
-      terms: "Conditions d'Utilisation",
       joinBtn: "REJOINDRE",
-      worldwide: "Monde (FR)"
+      rights: "DIOXERA TECHNOLOGY. TOUS DROITS RÉSERVÉS.",
+      privacy: "Politique de Confidentialité",
+      terms: "Conditions d'Utilisation"
     },
     shop: {
       title: "Catalogue.",

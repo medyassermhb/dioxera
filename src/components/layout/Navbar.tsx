@@ -73,8 +73,7 @@ export default function Header() {
         >
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             
-            {/* LOGO - ADJUSTED SIZE */}
-            {/* Changed from md:w-64 to md:w-48 (192px) for a balanced look */}
+            {/* LOGO */}
             <Link href="/" className="relative w-40 h-10 md:w-48 md:h-12 block transition-all duration-300">
               <Image 
                 src="https://losdmrjfozfpvhuejdsp.supabase.co/storage/v1/object/public/dioxera/logo%20dioxera.svg" 

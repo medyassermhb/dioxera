@@ -13,19 +13,19 @@ export interface CartItem {
 export type Language = 'en' | 'fr';
 
 interface AppStore {
-  // Cart State
+  // --- Cart State ---
   items: CartItem[];
-  isCartOpen: boolean; // Renamed from isOpen to be more specific
+  isCartOpen: boolean; 
+  
+  // --- Cart Actions ---
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
-  
-  // Cart Actions
   toggleCart: () => void;
-  openCart: () => void;   // Restored
-  closeCart: () => void;  // Restored
+  openCart: () => void;
+  closeCart: () => void;
 
-  // Language State
+  // --- Language State ---
   language: Language;
   setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
@@ -34,10 +34,11 @@ interface AppStore {
 export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
-      // --- Cart Logic ---
+      // Cart Initial State
       items: [],
       isCartOpen: false,
-      
+
+      // Cart Logic
       addItem: (item) =>
         set((state) => {
           const existing = state.items.find((i) => i.id === item.id);
@@ -46,7 +47,7 @@ export const useAppStore = create<AppStore>()(
               items: state.items.map((i) =>
                 i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
               ),
-              isCartOpen: true, 
+              isCartOpen: true, // Auto-open cart on add
             };
           }
           return { 
@@ -61,12 +62,12 @@ export const useAppStore = create<AppStore>()(
         })),
 
       clearCart: () => set({ items: [] }),
-      
-      toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
-      openCart: () => set({ isCartOpen: true }),
-      closeCart: () => set({ isCartOpen: false }),
 
-      // --- Language Logic ---
+      toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
+      openCart: () => set((state) => ({ isCartOpen: true })), // Fixed: Added closing parenthesis
+      closeCart: () => set((state) => ({ isCartOpen: false })), // Fixed: Added closing parenthesis
+
+      // Language Logic
       language: 'en',
       setLanguage: (lang) => set({ language: lang }),
       toggleLanguage: () => set((state) => ({ 

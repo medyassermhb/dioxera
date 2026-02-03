@@ -1,16 +1,14 @@
-// src/components/CartDrawer.tsx
 "use client";
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '@/lib/store'; // FIXED IMPORT
-import { dictionary } from '@/lib/dictionary'; // IMPORT DICTIONARY
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
 import { X, Trash2, ArrowRight, ShoppingBag, Sparkles, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function CartDrawer() {
-  // Use new store hooks and language
   const { items, isCartOpen, closeCart, removeItem, addItem, language } = useAppStore();
   const t = dictionary[language];
 
