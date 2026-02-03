@@ -1,45 +1,38 @@
-// src/components/layout/Navbar.tsx
 "use client";
 
 import { ShoppingBag, Globe, Menu, User, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAppStore } from '@/lib/store'; // Updated import
-import { dictionary } from '@/lib/dictionary'; // Import dictionary
+import { useAppStore } from '@/lib/store';
+import { dictionary } from '@/lib/dictionary';
 import { supabase } from '@/lib/supabase';
-import CartDrawer from '@/components/CartDrawer'; // Ensure this uses the new store too if needed
+import CartDrawer from '@/components/CartDrawer';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
-  // Destructure language and cart actions
   const { items, toggleCart, language, toggleLanguage } = useAppStore();
-  const t = dictionary[language]; // 't' is our translation accessor
+  const t = dictionary[language]; 
   
   const router = useRouter();
   
-  // State
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // Handle Hydration, Scroll & Auth
   useEffect(() => {
     setMounted(true);
     
-    // 1. Scroll Handler
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
-    // 2. Check User Session
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
     checkUser();
 
-    // 3. Listen for Login/Logout events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -63,12 +56,12 @@ export default function Header() {
     <>
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         
-        {/* 1. Announcement Bar */}
+        {/* Announcement Bar */}
         <div className="bg-brand-primary text-brand-dark text-center py-2 text-[10px] lg:text-xs font-black tracking-[0.2em] uppercase">
           {t.nav.shipping}
         </div>
         
-        {/* 2. Navigation */}
+        {/* Navigation */}
         <nav 
           className={`
             w-full border-b transition-all duration-500 px-6
@@ -80,8 +73,9 @@ export default function Header() {
         >
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             
-            {/* LOGO */}
-            <Link href="/" className="relative w-40 h-10 block">
+            {/* LOGO - ADJUSTED SIZE */}
+            {/* Changed from md:w-64 to md:w-48 (192px) for a balanced look */}
+            <Link href="/" className="relative w-40 h-10 md:w-48 md:h-12 block transition-all duration-300">
               <Image 
                 src="https://losdmrjfozfpvhuejdsp.supabase.co/storage/v1/object/public/dioxera/logo%20dioxera.svg" 
                 alt="Dioxera Logo"
@@ -102,7 +96,7 @@ export default function Header() {
             {/* Actions */}
             <div className="flex items-center space-x-6 text-white">
               
-              {/* Globe / Language Switcher - NOW FUNCTIONAL */}
+              {/* Globe / Language Switcher */}
               <button 
                 onClick={toggleLanguage}
                 className="hidden md:flex items-center gap-1 hover:text-brand-primary transition group"
@@ -158,12 +152,10 @@ export default function Header() {
              
              <hr className="border-white/10" />
 
-             {/* Mobile Language Switcher */}
              <button onClick={() => { toggleLanguage(); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-lg font-black uppercase tracking-wider hover:text-brand-primary transition w-full text-left">
                 <Globe size={20} /> {language === 'en' ? 'Switch to French' : 'Passer en Anglais'}
              </button>
              
-             {/* Mobile Account Links */}
              {user ? (
                 <>
                   <Link href={accountLink} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 text-lg font-black uppercase tracking-wider hover:text-brand-primary transition">
@@ -182,7 +174,6 @@ export default function Header() {
         )}
       </header>
       
-      {/* Ensure CartDrawer is updated to use the new store hook if necessary */}
       <CartDrawer />
     </>
   );
