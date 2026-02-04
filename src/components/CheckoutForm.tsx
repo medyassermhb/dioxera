@@ -1,7 +1,7 @@
 "use client";
 
-import { useAppStore } from "@/lib/store"; // FIXED IMPORT
-import { dictionary } from "@/lib/dictionary"; // IMPORT DICTIONARY
+import { useAppStore } from "@/lib/store"; 
+import { dictionary } from "@/lib/dictionary"; 
 import { useState } from "react";
 import { 
   Truck, User, MapPin, Smartphone, ToggleLeft, ToggleRight, 
@@ -11,8 +11,8 @@ import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function CheckoutForm() {
-  const { items, clearCart, language } = useAppStore(); // FIXED HOOK
-  const t = dictionary[language].checkout.form;
+  const { items, clearCart, language } = useAppStore(); 
+  const t = dictionary[language as keyof typeof dictionary].checkout.form;
   
   const router = useRouter();
   
@@ -34,7 +34,7 @@ export default function CheckoutForm() {
 
   // -- Calculations --
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shippingCost = subtotal > 150 ? 0 : 25; 
+  const shippingCost = 25.00; // Flat Rate (No free shipping threshold)
   const total = subtotal + shippingCost;
 
   // -- Main Submission Handler --

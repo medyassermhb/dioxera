@@ -5,7 +5,7 @@ export type Language = 'en' | 'fr';
 export const dictionary = {
   en: {
     nav: {
-      shipping: "Global Shipping — Free Express Delivery on Gen-1 Units",
+      shipping: "Worldwide Shipping Available",
       shop: "Shop",
       technology: "Technology",
       about: "About",
@@ -135,26 +135,28 @@ footer: {
     },
     product: {
       breadcrumbShop: "Shop",
-      series: "Gen-1 Series",
+      noImage: "No Image Available",
+      related: "Related Products",
+      vat: "Inc. VAT",
       inStock: "In Stock",
-      vat: "Includes VAT & Duty",
-      freeShipping: "Free Global Shipping on orders over €150",
-      specifications: "Specifications",
-      boxContents: "What's in the box",
-      shippingReturns: "Shipping & Returns",
-      warranty: "Warranty",
-      related: "You might also need",
-      noImage: "NO IMAGE",
-      detail: "DETAIL",
-      specs: {
-        cap: "Capacity: 500ml per cycle",
-        conc: "Concentration: 3000 PPM (+/- 5%)",
-        pwr: "Power: 220V / 50Hz",
-        mat: "Material: Borosilicate Glass & 316L Steel"
-      },
-      boxText: "1x Gen-1 Unit, 1x Power Cable (EU), 1x User Manual, 1x Starter Chemical Kit.",
-      shippingText: "Ships within 24 hours via DHL Express. 30-day money back guarantee if unit is unopened.",
-      warrantyText: "2-Year comprehensive warranty covering all mechanical and electrical components."
+      
+      // New keys for the "Deep Dive" design
+      series: "Professional Series",
+      warranty: "2 Year Warranty",
+      
+      // Tabs
+      tabSpecs: "Specifications",
+      tabFeatures: "Sys. Features",
+      tabBox: "In The Box",
+      
+      // Fallback/Empty States
+      noSpecs: "No specifications available for this unit.",
+      noFeatures: "No specific features listed.",
+      noContent: "Contents not listed.",
+      defaultDesc: "Engineered for autonomous operation and industrial precision.",
+      
+      // Mobile Headers
+      techHighlights: "Technical Highlights"
     },
     technology: {
       hero: {
@@ -495,7 +497,7 @@ form: {
   },
   fr: {
     nav: {
-      shipping: "Expédition Mondiale — Livraison Express Gratuite sur les Unités Gen-1",
+      shipping: "Livraison internationale disponible",
       shop: "Boutique",
       technology: "Technologie",
       about: "À Propos",
@@ -623,28 +625,26 @@ footer: {
       inStock: "En Stock",
       loading: "Chargement du catalogue...",
     },
-    product: {
+product: {
       breadcrumbShop: "Boutique",
-      series: "Série Gen-1",
+      noImage: "Aucune image disponible",
+      related: "Produits Similaires",
+      vat: "TTC",
       inStock: "En Stock",
-      vat: "TVA et Droits Inclus",
-      freeShipping: "Livraison Mondiale Gratuite dès 150€",
-      specifications: "Spécifications",
-      boxContents: "Contenu de la boîte",
-      shippingReturns: "Livraison & Retours",
-      warranty: "Garantie",
-      related: "Vous pourriez aussi avoir besoin de",
-      noImage: "AUCUNE IMAGE",
-      detail: "DÉTAIL",
-      specs: {
-        cap: "Capacité : 500ml par cycle",
-        conc: "Concentration : 3000 PPM (+/- 5%)",
-        pwr: "Puissance : 220V / 50Hz",
-        mat: "Matériaux : Verre Borosilicaté & Acier 316L"
-      },
-      boxText: "1x Unité Gen-1, 1x Câble d'alimentation (EU), 1x Manuel, 1x Kit Chimique de Démarrage.",
-      shippingText: "Expédié sous 24h via DHL Express. Garantie satisfait ou remboursé de 30 jours si non ouvert.",
-      warrantyText: "Garantie complète de 2 ans couvrant tous les composants mécaniques et électriques."
+      
+      series: "Série Professionnelle",
+      warranty: "Garantie 2 Ans",
+      
+      tabSpecs: "Spécifications",
+      tabFeatures: "Fonctionnalités",
+      tabBox: "Dans la Boîte",
+      
+      noSpecs: "Aucune spécification disponible pour cette unité.",
+      noFeatures: "Aucune fonctionnalité listée.",
+      noContent: "Contenu non listé.",
+      defaultDesc: "Conçu pour une opération autonome et une précision industrielle.",
+      
+      techHighlights: "Points Forts Techniques"
     },
     technology: {
       hero: {

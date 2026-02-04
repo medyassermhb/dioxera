@@ -3,14 +3,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/lib/store';
 import { dictionary } from '@/lib/dictionary';
-import { X, Trash2, ArrowRight, ShoppingBag, Sparkles, Plus } from 'lucide-react';
+import { X, Trash2, ArrowRight, ShoppingBag, Sparkles, Plus, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function CartDrawer() {
   const { items, isCartOpen, closeCart, removeItem, addItem, language } = useAppStore();
-  const t = dictionary[language];
+  const t = dictionary[language as keyof typeof dictionary] || dictionary.en;
 
   const [suggestedAddons, setSuggestedAddons] = useState<any[]>([]);
   
@@ -37,9 +37,8 @@ export default function CartDrawer() {
   );
 
   const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const FREE_SHIPPING_THRESHOLD = 150;
-  const remaining = FREE_SHIPPING_THRESHOLD - total;
-  const progress = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
+
+  // --- REMOVED FREE SHIPPING LOGIC --- 
 
   return (
     <AnimatePresence>
@@ -68,22 +67,12 @@ export default function CartDrawer() {
               <button onClick={closeCart} className="hover:rotate-90 transition-transform p-2"><X size={24}/></button>
             </div>
 
-            {/* Free Shipping Bar */}
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 shrink-0">
-               <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-center text-gray-500">
-                 {remaining > 0 ? (
-                   <>{t.cart.add} <span className="text-brand-dark">€{remaining.toFixed(2)}</span> {t.cart.forFreeShipping}</>
-                 ) : (
-                   <span className="text-brand-dark">🎉 {t.cart.unlocked} <span className="text-brand-primary bg-black px-1">{t.cart.freeShipping}</span></span>
-                 )}
+            {/* NEW: Simple Shipping Announcement (Replaces Progress Bar) */}
+            <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 shrink-0">
+               <p className="text-[10px] font-bold uppercase tracking-widest text-center text-gray-500 flex items-center justify-center gap-2">
+                 <Globe size={12} className="text-brand-dark"/>
+                 <span>Worldwide Shipping Available</span>
                </p>
-               <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    className="h-full bg-brand-primary"
-                  />
-               </div>
             </div>
 
             {/* Items List */}
@@ -105,8 +94,14 @@ export default function CartDrawer() {
                         key={item.id} 
                         className="flex gap-4 group"
                       >
-                        <div className="w-20 h-20 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center text-2xl shrink-0">
-                           {item.name?.toLowerCase().includes('gen') ? '🧬' : (item.name?.includes('Water') ? '💧' : '🧪')}
+                        {/* Image Logic */}
+                        <div className="w-20 h-20 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+                           {item.image ? (
+                             /* eslint-disable-next-line @next/next/no-img-element */
+                             <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2 mix-blend-multiply" />
+                           ) : (
+                             <span>{item.name?.toLowerCase().includes('gen') ? '🧬' : '🧪'}</span>
+                           )}
                         </div>
 
                         <div className="flex-1 flex flex-col justify-center">
@@ -128,6 +123,7 @@ export default function CartDrawer() {
                     ))}
                   </div>
 
+                  {/* Recommendations */}
                   {activeSuggestions.length > 0 && (
                     <div className="mt-8 pt-6 border-t border-dashed border-gray-200">
                       <div className="flex items-center gap-2 mb-4">
@@ -138,8 +134,13 @@ export default function CartDrawer() {
                       <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x">
                         {activeSuggestions.map(addon => (
                           <div key={addon.id} className="min-w-[200px] snap-center bg-gray-50 border border-gray-100 p-3 rounded-xl flex gap-3 items-center group hover:border-brand-primary transition-colors">
-                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-lg shadow-sm shrink-0">
-                              {addon.name.toLowerCase().includes('water') ? '💧' : '🧪'}
+                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-lg shadow-sm shrink-0 overflow-hidden">
+                              {addon.image ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={addon.image} alt={addon.name} className="w-full h-full object-contain p-1" />
+                              ) : (
+                                <span>🧪</span>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                                <h4 className="font-bold text-xs truncate">{addon.name}</h4>

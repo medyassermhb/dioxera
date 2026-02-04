@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Navbar';
 import CheckoutForm from '@/components/CheckoutForm'; 
-import { useAppStore } from '@/lib/store'; // FIXED IMPORT
-import { dictionary } from '@/lib/dictionary'; // IMPORT DICTIONARY
+import { useAppStore } from '@/lib/store'; 
+import { dictionary } from '@/lib/dictionary';
 import { supabase } from '@/lib/supabase';
-import { ShieldCheck, Package, ShoppingCart, User, ArrowRight } from 'lucide-react';
+import { ShieldCheck, ShoppingCart, User, ArrowRight, Truck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
-  const { items, language } = useAppStore(); // FIXED HOOK
-  const t = dictionary[language].checkout;
+  const { items, language } = useAppStore(); 
+  const t = dictionary[language as keyof typeof dictionary].checkout;
 
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<'gate' | 'login' | 'register' | 'checkout'>('gate'); 
@@ -67,7 +67,8 @@ export default function CheckoutPage() {
   if (!mounted) return null;
 
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = subtotal > 150 ? 0 : 25.00;
+  // --- UPDATED SHIPPING LOGIC: Flat Rate Only (No Free Threshold) ---
+  const shipping = 25.00; 
   const total = subtotal + shipping;
 
   return (
@@ -150,7 +151,7 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="text-center py-20">
                      <p className="text-gray-400 mb-4">{t.main.empty}</p>
-                     <Link href="/products" className="text-brand-dark font-bold underline">{t.main.return}</Link>
+                     <Link href="/shop" className="text-brand-dark font-bold underline">{t.main.return}</Link>
                   </div>
                 )}
               </div>
@@ -173,7 +174,7 @@ export default function CheckoutPage() {
                       <div className="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 relative overflow-hidden border border-white/10">
                          {item.image ? (
                            /* eslint-disable-next-line @next/next/no-img-element */
-                           <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-90" />
+                           <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-90 mix-blend-overlay" />
                          ) : (
                            <span>📦</span>
                          )}
@@ -197,7 +198,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-gray-400">
                   <span>{t.summary.shipping}</span>
-                  <span>{shipping === 0 ? <span className="text-brand-primary font-bold">{t.summary.free}</span> : `€${shipping.toFixed(2)}`}</span>
+                  <span>€{shipping.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-400">
                   <span>{t.summary.tax}</span>
@@ -210,8 +211,9 @@ export default function CheckoutPage() {
                  <span className="text-4xl font-black text-brand-primary tracking-tighter">€{total.toFixed(2)}</span>
               </div>
               
+              {/* --- CHANGED: Standard Worldwide Shipping Text --- */}
               <div className="mt-8 flex items-center justify-center gap-2 text-[10px] text-gray-500 uppercase tracking-widest font-bold">
-                 <Package size={12} /> {t.summary.logistics}
+                 <Truck size={12} /> Worldwide Standard Shipping
               </div>
             </div>
           </div>

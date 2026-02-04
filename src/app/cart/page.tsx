@@ -1,8 +1,7 @@
-// src/app/cart/page.tsx
 "use client";
 
 import Header from '@/components/layout/Navbar';
-import { useAppStore } from '@/lib/store'; // FIXED IMPORT
+import { useAppStore } from '@/lib/store';
 import { dictionary } from '@/lib/dictionary';
 import Link from 'next/link';
 import { Trash2, Plus, Minus, ArrowLeft, ShieldCheck, Sparkles, PlusCircle } from 'lucide-react';
@@ -11,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function CartPage() {
   const { items, removeItem, addItem, language } = useAppStore();
-  const t = dictionary[language];
+  const t = dictionary[language as keyof typeof dictionary] || dictionary.en;
   
   const [mounted, setMounted] = useState(false);
   const [suggestedAddons, setSuggestedAddons] = useState<any[]>([]);
@@ -63,9 +62,18 @@ export default function CartPage() {
                 <div className="space-y-8">
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex gap-8 border-b border-gray-100 pb-8 items-center">
-                      <div className="w-32 h-32 bg-gray-50 rounded-2xl flex items-center justify-center text-4xl border border-gray-100 shrink-0">
-                         {item.name?.toLowerCase().includes('dioxera') || item.name?.toLowerCase().includes('3000') ? '🧬' : (item.name?.toLowerCase().includes('water') ? '💧' : '🧪')}
+                      
+                      {/* --- FIXED CART ITEM IMAGE --- */}
+                      <div className="w-32 h-32 bg-gray-50 rounded-2xl flex items-center justify-center text-4xl border border-gray-100 shrink-0 overflow-hidden">
+                         {item.image ? (
+                           /* eslint-disable-next-line @next/next/no-img-element */
+                           <img src={item.image} alt={item.name} className="w-full h-full object-contain p-4 mix-blend-multiply" />
+                         ) : (
+                           <span>🧬</span>
+                         )}
                       </div>
+                      {/* ----------------------------- */}
+
                       <div className="flex-1">
                         <div className="flex justify-between mb-2">
                           <h3 className="text-xl font-bold">{item.name}</h3>
@@ -78,7 +86,7 @@ export default function CartPage() {
                         
                         <div className="flex items-center gap-6">
                           <div className="flex items-center border border-gray-200 rounded-lg">
-                             <button className="px-3 py-1 hover:bg-gray-100 text-gray-400"><Minus size={16}/></button>
+                             <button onClick={() => item.quantity > 1 && removeItem(item.id)} className="px-3 py-1 hover:bg-gray-100 text-gray-400"><Minus size={16}/></button>
                              <span className="px-3 font-bold text-sm">{item.quantity}</span>
                              <button onClick={() => addItem(item)} className="px-3 py-1 hover:bg-gray-100"><Plus size={16}/></button>
                           </div>
@@ -99,9 +107,16 @@ export default function CartPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {activeSuggestions.map(addon => (
                         <div key={addon.id} className="group border border-gray-200 p-4 rounded-2xl flex items-center gap-4 hover:border-brand-primary transition-all bg-gray-50/50">
-                          <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm border border-gray-100 shrink-0">
-                             {addon.name.toLowerCase().includes('water') ? '💧' : '🧪'}
+                          {/* --- FIXED SUGGESTION IMAGE --- */}
+                          <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm border border-gray-100 shrink-0 overflow-hidden">
+                             {addon.image ? (
+                               <img src={addon.image} alt={addon.name} className="w-full h-full object-contain p-2" />
+                             ) : (
+                               <span>🧪</span>
+                             )}
                           </div>
+                          {/* ----------------------------- */}
+                          
                           <div className="flex-1">
                             <h4 className="font-bold text-sm">{addon.name}</h4>
                             <p className="text-xs text-gray-500 mb-2 line-clamp-1">{addon.description || "Essential add-on."}</p>
