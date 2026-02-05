@@ -1,4 +1,3 @@
-// src/app/api/webhooks/stripe/route.ts
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -6,14 +5,16 @@ import { createClient } from "@supabase/supabase-js";
 import { sendOrderConfirmation } from "@/lib/sendOrderEmail";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
+  apiVersion: "2026-01-28.clover", // Ensure this matches your package version
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get("stripe-signature") as string;
+  
+  // FIX: Await the headers() call
+  const signature = (await headers()).get("stripe-signature") as string;
 
   let event: Stripe.Event;
 
