@@ -7,6 +7,10 @@ const user = process.env.SMTP_USER;
 const pass = process.env.SMTP_PASS;
 const adminEmail = process.env.ADMIN_EMAIL;
 
+// --- FIX: DEFINE SITE URL ---
+// This prioritizes the Vercel Env Var, then falls back to your domain, then localhost
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://dioxera.com";
+
 const LOGO_URL = "https://losdmrjfozfpvhuejdsp.supabase.co/storage/v1/object/public/dioxera/logo%20dioxera.png";
 const BRAND_COLOR = "#CBDA08"; // Dioxera Neon/Yellow
 const DARK_COLOR = "#111111";
@@ -122,7 +126,7 @@ export async function sendOrderConfirmation(order: any) {
             ` : ''}
 
             <div style="text-align: center; margin-top: 40px;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL}/api/download-invoice?id=${order.id}" style="${buttonStyle}">Download Official Invoice</a>
+              <a href="${SITE_URL}/api/download-invoice?id=${order.id}" style="${buttonStyle}">Download Official Invoice</a>
               <p style="margin-top: 20px; font-size: 12px; color: #999;">
                 Need help? Reply to this email or contact support@dioxera.com
               </p>
@@ -272,7 +276,7 @@ export async function sendStatusUpdateEmail(order: any, newStatus: string) {
         <p><strong>Total Amount:</strong> €${Number(order.total_amount).toFixed(2)}</p>
         
         <p style="margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_BASE_URL}/api/download-invoice?id=${order.id}" style="background: #111; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">View Order & Invoice</a>
+          <a href="${SITE_URL}/api/download-invoice?id=${order.id}" style="background: #111; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">View Order & Invoice</a>
         </p>
       </div>
 
