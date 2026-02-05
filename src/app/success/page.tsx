@@ -17,7 +17,6 @@ export default async function SuccessPage({
       <main className="min-h-screen bg-gray-50 pt-40 pb-20 px-6">
         <SuccessContent id={id || "UNKNOWN"} isBankTransfer={isBankTransfer} />
       </main>
-      <Footer />
     </>
   );
 }
