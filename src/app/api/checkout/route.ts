@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import { sendOrderConfirmation } from '@/lib/sendOrderEmail';
+// Email import removed
 
-// FIX: Updated apiVersion to match your installed library
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-apiVersion: "2026-01-28.clover",
-}); 
-// Note: If you get an error again, copy the EXACT string the error asks for (e.g., "2026-01-28.clover") 
-// and paste it above. But usually, "2025-02-24.acacia" is the standard stable one right now.
+  apiVersion: "2026-01-28.clover", 
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,11 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Could not create order" }, { status: 500 });
     }
 
-    // 2. SEND EMAIL
-    console.log("👉 Triggering Stripe email send...");
-    await sendOrderConfirmation(order);
-
-    // 3. Create Stripe Session
+    // 2. Create Stripe Session
     const lineItems = items.map((item: any) => ({
       price_data: {
         currency: "eur",
@@ -71,7 +64,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/success?method=stripe&id=${order.id}`,
+      success_url: `${req.headers.get("origin")}/success?method=stripe&id=${order.id}`, // Redirects here
       cancel_url: `${req.headers.get("origin")}/checkout`,
       customer_email: email,
       metadata: { orderId: order.id },

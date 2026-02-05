@@ -1,18 +1,43 @@
-// src/components/SuccessContent.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useEffect, useRef
 import { CheckCircle2, Copy, ShieldCheck, Download, ExternalLink, ArrowRight, Building2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { dictionary } from '@/lib/dictionary';
 
 export default function SuccessContent({ id, isBankTransfer }: { id: string, isBankTransfer: boolean }) {
-  const { language } = useAppStore();
-  const t = dictionary[language].success;
+  const { language, clearCart } = useAppStore(); // Added clearCart
+  // Safe dictionary access
+  const t = (dictionary[language as keyof typeof dictionary] || dictionary.en).success;
 
   const [confirmed, setConfirmed] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  
+  // Ref to prevent double-firing in strict mode
+  const emailSentRef = useRef(false);
+
+  // --- TRIGGER EMAIL & CLEAR CART ON MOUNT ---
+  useEffect(() => {
+    if (id && id !== "UNKNOWN" && !emailSentRef.current) {
+      emailSentRef.current = true;
+      
+      // 1. Clear the cart (Order is done)
+      clearCart();
+
+      // 2. Call the API to send the email
+      console.log("🚀 Triggering confirmation email...");
+      fetch('/api/orders/trigger-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: id }),
+      })
+      .then(res => res.json())
+      .then(data => console.log("📧 Email Status:", data))
+      .catch(err => console.error("❌ Email Failed:", err));
+    }
+  }, [id, clearCart]);
+  // -------------------------------------------
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -44,7 +69,7 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
       {!isBankTransfer && id !== "UNKNOWN" && (
         <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-xl mb-10 animate-in slide-in-from-bottom-4">
            <h3 className="text-xl font-bold mb-2">{t.cardMessage}</h3>
-           <p className="text-gray-500 mb-8"></p>
+           <p className="text-gray-500 mb-8 text-sm">A copy has been sent to your email.</p>
            
            <a 
              href={`/api/download-invoice?id=${id}`} 
@@ -131,7 +156,7 @@ export default function SuccessContent({ id, isBankTransfer }: { id: string, isB
         <Link href="/" className="px-8 py-4 bg-gray-100 rounded-full font-bold text-gray-600 hover:bg-gray-200 transition">
           {t.returnHome}
         </Link>
-        <Link href="/products" className="px-8 py-4 bg-white border border-gray-200 rounded-full font-bold hover:border-brand-dark transition flex items-center gap-2">
+        <Link href="/shop" className="px-8 py-4 bg-white border border-gray-200 rounded-full font-bold hover:border-brand-dark transition flex items-center gap-2">
           {t.continueShopping} <ArrowRight size={18} />
         </Link>
       </div>
